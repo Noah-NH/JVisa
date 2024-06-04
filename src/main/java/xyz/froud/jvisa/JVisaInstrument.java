@@ -33,7 +33,7 @@ import java.nio.ByteBuffer;
  * @author Günter Fuchs (gfuchs@acousticmicroscopy.com)
  * @author Peter Froud
  */
-public class JVisaInstrument implements AutoCloseable {
+public class JVisaInstrument implements Instrument, AutoCloseable {
 
     private final static int DEFAULT_BUFFER_SIZE = 1024;
 
