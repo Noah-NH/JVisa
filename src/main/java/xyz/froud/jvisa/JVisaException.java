@@ -24,6 +24,7 @@ package xyz.froud.jvisa;
  * @author Peter Froud
  */
 public class JVisaException extends Exception {
+    private long statusCode;
 
     public JVisaException(String message) {
         super(message);
@@ -35,6 +36,11 @@ public class JVisaException extends Exception {
 
     public JVisaException(long statusCode, String cFunctionName, String errorDescription) {
         super(String.format("in %s(): %s (0x%H)", cFunctionName, errorDescription, statusCode));
+
+        this.statusCode = statusCode;
     }
 
+    public long getStatusCode() {
+        return statusCode;
+    }
 }
