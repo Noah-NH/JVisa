@@ -15,7 +15,7 @@ public interface Instrument {
      *
      * @param command string to send
      * @return response from instrument as a String
-     * @throws Exception, either {@link java.io.IOException} or {@link JVisaException}
+     * @throws Exception if the write operation fails or the read operation fails
      */
     String queryString(String command) throws Exception;
 
@@ -54,7 +54,7 @@ public interface Instrument {
      * Sends a command to the instrument.
      *
      * @param command the command to send
-     * @throws Exception, either {@link java.io.IOException} or {@link JVisaException}
+     * @throws Exception if the write operation fails or the read operation fails
      */
     void write(String command) throws Exception;
 
