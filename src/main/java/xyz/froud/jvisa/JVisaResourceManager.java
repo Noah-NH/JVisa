@@ -17,10 +17,12 @@
  */
 package xyz.froud.jvisa;
 
+import com.sun.jna.Memory;
 import com.sun.jna.Native;
 import com.sun.jna.NativeLong;
 import com.sun.jna.Platform;
 import com.sun.jna.ptr.NativeLongByReference;
+import xyz.froud.jvisa.constants.AccessMode;
 
 import java.nio.ByteBuffer;
 import java.util.Set;
@@ -34,6 +36,7 @@ import java.util.Set;
  */
 public class JVisaResourceManager implements AutoCloseable {
 
+    private final static int DEFAULT_BUFFER_SIZE = 1024;
     /**
      * A unique logical identifier to the Visa session. In the C API, this is called ViSession.
      */
@@ -155,13 +158,28 @@ public class JVisaResourceManager implements AutoCloseable {
      * @see <a href="https://www.ni.com/docs/en-US/bundle/ni-visa/page/ni-visa/viopen.html">viOpen</a>
      */
     public JVisaInstrument openInstrument(String resourceName) throws JVisaException {
+        return openInstrument(resourceName, AccessMode.NO_LOCK, 0);
+    }
+
+    /**
+     * Opens an instrument session.
+     *
+     * @param resourceName resource name to open
+     * @param accessMode Specifies the mode by which the resource is to be accessed
+     * @param openTimeout Specifies the maximum time period (in milliseconds) that this operation waits before returning an error
+     *
+     * @return a JVisaInstrument instance for the instrument
+     * @throws JVisaException if the resource couldn't be opened
+     * @see <a href="https://www.ni.com/docs/en-US/bundle/ni-visa/page/ni-visa/viopen.html">viOpen</a>
+     */
+    public JVisaInstrument openInstrument(String resourceName, AccessMode accessMode, int openTimeout) throws JVisaException {
 
         final NativeLongByReference instrumentHandle = new NativeLongByReference();
 
         final NativeLong errorCode = VISA_LIBRARY.viOpen(RESOURCE_MANAGER_HANDLE,
                 JVisaUtils.stringToByteBuffer(resourceName),
-                new NativeLong(0), // ViAccessMode accessMode - 0 (VI_NULL) for default access mode
-                new NativeLong(0), // ViUInt32 openTimeout - how long to wait before returning error. Only when the access mode equals locking?
+                new NativeLong(accessMode.VALUE), // ViAccessMode accessMode - 0 (VI_NULL) for default access mode
+                new NativeLong(openTimeout), // ViUInt32 openTimeout - how long to wait before returning error. Only when the access mode equals locking?
                 instrumentHandle
         );
         checkError(errorCode, "viOpen");
@@ -274,6 +292,39 @@ public class JVisaResourceManager implements AutoCloseable {
         final NativeLong errorCodeClose = VISA_LIBRARY.viClose(findListPtr.getValue());
         checkError(errorCodeClose, "viClose");
 
+        return rv;
+    }
+
+    /**
+     * @see <a href="https://www.ni.com/docs/en-US/bundle/ni-visa/page/ni-visa/vigetattribute.html">viGetAttribute</a>
+     */
+    public String getAttributeString(int attr) throws JVisaException {
+        return getAttributeString(attr, DEFAULT_BUFFER_SIZE);
+    }
+
+    /**
+     * @see <a href="https://www.ni.com/docs/en-US/bundle/ni-visa/page/ni-visa/vigetattribute.html">viGetAttribute</a>
+     */
+    public String getAttributeString(int attr, int bufferSize) throws JVisaException {
+        /*
+        Calling memory.getString() calls the native method
+            com.sun.jna.Native.getStringBytes()
+        so I think it does something more interesting than getting bytes
+        from the memory then calling the String constructor on the bytes.
+         */
+        return getAttributeMemory(attr, bufferSize).getString(0);
+    }
+
+    /**
+     * @see <a href="https://www.ni.com/docs/en-US/bundle/ni-visa/page/ni-visa/vigetattribute.html">viGetAttribute</a>
+     */
+    private Memory getAttributeMemory(int attr, int bufferSize) throws JVisaException {
+        final Memory rv = new Memory(bufferSize);
+
+        final NativeLong errorCode = VISA_LIBRARY.viGetAttribute(RESOURCE_MANAGER_HANDLE, new NativeLong(attr), rv);
+        checkError(errorCode, "viGetAttribute");
+
+        // apparently we can't dispose or free or finalize a Memory, just need to let JVM call finalize()
         return rv;
     }
 
