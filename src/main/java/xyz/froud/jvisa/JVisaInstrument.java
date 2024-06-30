@@ -463,6 +463,14 @@ public class JVisaInstrument implements Instrument, AutoCloseable {
     }
 
     /**
+     * @see <a href="https://www.ni.com/docs/en-US/bundle/ni-visa/page/ni-visa/vi_attr_send_end_en.html">VI_ATTR_SEND_END_EN</a>
+     * @see <a href="https://www.ni.com/docs/en-US/bundle/ni-visa/page/ni-visa/visetattribute.html">viSetAttribute</a>
+     */
+    public void setSendEndEn(boolean sendEndEn) throws JVisaException {
+        setAttribute(JVisaLibrary.VI_ATTR_SEND_END_EN, sendEndEn ? 1 : 0);
+    }
+
+    /**
      * @see <a href="https://www.ni.com/docs/en-US/bundle/ni-visa/page/ni-visa/vigetattribute.html">viGetAttribute</a>
      */
     public String getAttributeString(int attr) throws JVisaException {
@@ -511,6 +519,20 @@ public class JVisaInstrument implements Instrument, AutoCloseable {
     }
 
     /**
+     * @see <a href="https://www.ni.com/docs/en-US/bundle/ni-visa/page/ni-visa/vigetattribute.html">viGetAttribute</a>
+     */
+    private int getAttributeInt(int attr) throws JVisaException {
+        return getAttributeMemory(attr, DEFAULT_BUFFER_SIZE).getInt(0);
+    }
+
+    /**
+     * @see <a href="https://www.ni.com/docs/en-US/bundle/ni-visa/page/ni-visa/vigetattribute.html">viGetAttribute</a>
+     */
+    private boolean getAttributeBoolean(int attr) throws JVisaException {
+        return getAttributeInt(attr) == 1;
+    }
+
+    /**
      * @see <a href="https://www.ni.com/docs/en-US/bundle/ni-visa/page/ni-visa/visetattribute.html">viSetAttribute</a>
      */
     public void setAttribute(int attr, long value) throws JVisaException {
@@ -542,6 +564,34 @@ public class JVisaInstrument implements Instrument, AutoCloseable {
      */
     public String getUsbSerialNumber() throws JVisaException {
         return getAttributeString(JVisaLibrary.VI_ATTR_USB_SERIAL_NUM);
+    }
+
+    /**
+     * @see <a href="https://www.ni.com/docs/en-US/bundle/ni-visa-api-ref/page/ni-visa-api-ref/vi_attr_intf_type.html">VI_ATTR_INTF_TYPE</a>
+     */
+    public InterfaceType getInterfaceType() throws JVisaException {
+        return InterfaceType.parseInt(getAttributeInt(JVisaLibrary.VI_ATTR_INTF_TYPE));
+    }
+
+    /**
+     * @see <a href="https://www.ni.com/docs/en-US/bundle/ni-visa-api-ref/page/ni-visa-api-ref/vi_attr_rsrc_class.html">VI_ATTR_RSRC_CLASS</a>
+     */
+    public String getResourceClass() throws JVisaException {
+        return getAttributeString(JVisaLibrary.VI_ATTR_RSRC_CLASS);
+    }
+
+    /**
+     * @see <a href="https://www.ni.com/docs/en-US/bundle/ni-visa-api-ref/page/ni-visa-api-ref/vi_attr_tmo_value.html">VI_ATTR_TMO_VALUE</a>
+     */
+    public long getTimeout() throws JVisaException {
+        return getAttributeInt(JVisaLibrary.VI_ATTR_TMO_VALUE);
+    }
+
+    /**
+     * @see <a href="https://www.ni.com/docs/en-US/bundle/ni-visa-api-ref/page/ni-visa-api-ref/vi_attr_send_end_en.html">VI_ATTR_SEND_END_EN</a>
+     */
+    public boolean isSendEndEn() throws JVisaException {
+        return getAttributeBoolean(JVisaLibrary.VI_ATTR_SEND_END_EN);
     }
 
     /**
