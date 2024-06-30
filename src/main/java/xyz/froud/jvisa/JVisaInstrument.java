@@ -20,6 +20,9 @@ package xyz.froud.jvisa;
 import com.sun.jna.Memory;
 import com.sun.jna.NativeLong;
 import com.sun.jna.ptr.NativeLongByReference;
+import xyz.froud.jvisa.constants.FlowControl;
+import xyz.froud.jvisa.constants.Parity;
+import xyz.froud.jvisa.constants.StopBits;
 import xyz.froud.jvisa.eventhandling.JVisaEventHandler;
 import xyz.froud.jvisa.eventhandling.JVisaEventType;
 
@@ -409,7 +412,7 @@ public class JVisaInstrument implements Instrument, AutoCloseable {
      * @see <a href="https://www.ni.com/docs/en-US/bundle/ni-visa/page/ni-visa/vi_attr_asrl_flow_cntrl.html">VI_ATTR_ASRL_FLOW_CNTRL</a>
      * @see <a href="https://www.ni.com/docs/en-US/bundle/ni-visa/page/ni-visa/visetattribute.html">viSetAttribute</a>
      */
-    public void setSerialFlowControl(SerialFlowControl flowControl) throws JVisaException {
+    public void setSerialFlowControl(FlowControl flowControl) throws JVisaException {
         setAttribute(JVisaLibrary.VI_ATTR_ASRL_FLOW_CNTRL, flowControl.VALUE);
     }
 
@@ -417,7 +420,7 @@ public class JVisaInstrument implements Instrument, AutoCloseable {
      * @see <a href="https://www.ni.com/docs/en-US/bundle/ni-visa/page/ni-visa/vi_attr_asrl_parity.html">VI_ATTR_ASRL_PARITY</a>
      * @see <a href="https://www.ni.com/docs/en-US/bundle/ni-visa/page/ni-visa/visetattribute.html">viSetAttribute</a>
      */
-    public void setSerialParity(SerialParity parity) throws JVisaException {
+    public void setSerialParity(Parity parity) throws JVisaException {
         setAttribute(JVisaLibrary.VI_ATTR_ASRL_PARITY, parity.VALUE);
     }
 
@@ -425,7 +428,7 @@ public class JVisaInstrument implements Instrument, AutoCloseable {
      * @see <a href="https://www.ni.com/docs/en-US/bundle/ni-visa/page/ni-visa/vi_attr_asrl_stop_bits.html">VI_ATTR_ASRL_STOP_BITS</a>
      * @see <a href="https://www.ni.com/docs/en-US/bundle/ni-visa/page/ni-visa/visetattribute.html">viSetAttribute</a>
      */
-    public void setSerialStopBits(SerialStopBits stopBits) throws JVisaException {
+    public void setSerialStopBits(StopBits stopBits) throws JVisaException {
         setAttribute(JVisaLibrary.VI_ATTR_ASRL_STOP_BITS, stopBits.VALUE);
     }
 
