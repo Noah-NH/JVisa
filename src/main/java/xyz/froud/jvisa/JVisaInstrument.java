@@ -20,8 +20,12 @@ package xyz.froud.jvisa;
 import com.sun.jna.Memory;
 import com.sun.jna.NativeLong;
 import com.sun.jna.ptr.NativeLongByReference;
+import xyz.froud.jvisa.constants.AccessMode;
 import xyz.froud.jvisa.constants.FlowControl;
+import xyz.froud.jvisa.constants.InterfaceType;
 import xyz.froud.jvisa.constants.Parity;
+import xyz.froud.jvisa.constants.RENLineOperation;
+import xyz.froud.jvisa.constants.StatusCode;
 import xyz.froud.jvisa.constants.StopBits;
 import xyz.froud.jvisa.eventhandling.JVisaEventHandler;
 import xyz.froud.jvisa.eventhandling.JVisaEventType;
@@ -44,6 +48,8 @@ public class JVisaInstrument implements Instrument, AutoCloseable {
     private final JVisaResourceManager RESOURCE_MANAGER;
     private final JVisaLibrary VISA_LIBRARY;
     public final String RESOURCE_NAME;
+
+    private StatusCode lastStatus;
 
     /**
      * A string appended to the end of every string sent to the instrument. If it null then nothing is appended.
@@ -202,24 +208,29 @@ public class JVisaInstrument implements Instrument, AutoCloseable {
     /**
      * Sends a command to the instrument. No write terminator is added.
      *
-     * @param command the command to send to the instrument
+     * @param bytes the command to send to the instrument
      *
      * @throws JVisaException if the write operation fails
      * @see <a href="https://www.ni.com/docs/en-US/bundle/ni-visa/page/ni-visa/viwrite.html">viWrite</a>
      */
     public void write(byte[] bytes) throws JVisaException {
-        write(ByteBuffer.wrap(bytes));
+        final long count = write(ByteBuffer.wrap(bytes));
+
+        if (count != bytes.length) {
+            throw new JVisaException(String.format("Could only write %d instead of %d bytes.",
+                    count, bytes.length));
+        }
     }
 
     /**
      * Sends a command to the instrument. No write terminator is added.
      *
-     * @param command the command to send to the instrument
+     * @param buffer the command to send to the instrument
      *
      * @throws JVisaException if the write operation fails
      * @see <a href="https://www.ni.com/docs/en-US/bundle/ni-visa/page/ni-visa/viwrite.html">viWrite</a>
      */
-    private void write(ByteBuffer buffer) throws JVisaException {
+    public long write(ByteBuffer buffer) throws JVisaException {
         final int commandLength = buffer.limit();
 
         final NativeLongByReference returnCount = new NativeLongByReference();
@@ -228,13 +239,10 @@ public class JVisaInstrument implements Instrument, AutoCloseable {
                 new NativeLong(commandLength),
                 returnCount
         );
+        lastStatus = StatusCode.parseLong(errorCode.longValue());
         RESOURCE_MANAGER.checkError(errorCode, "viWrite");
 
-        final long count = returnCount.getValue().longValue();
-        if (count != commandLength) {
-            throw new JVisaException(String.format("Could only write %d instead of %d bytes.",
-                    count, commandLength));
-        }
+        return returnCount.getValue().longValue();
     }
 
     /**
@@ -254,6 +262,7 @@ public class JVisaInstrument implements Instrument, AutoCloseable {
                 new NativeLong(byteCount),
                 readCountNative
         );
+        lastStatus = StatusCode.parseLong(errorCode.longValue());
         RESOURCE_MANAGER.checkError(errorCode, "viRead");
 
         final long readCount = readCountNative.getValue().longValue();
@@ -276,13 +285,32 @@ public class JVisaInstrument implements Instrument, AutoCloseable {
     }
 
     /**
-     * reads a string from the instrument, usually a command response.
+     * Reads a string from the instrument, usually a command response.
      *
      * @return status of the operation
      * @throws JVisaException if the read operation fails
      */
     public String readString() throws JVisaException {
         return readString(DEFAULT_BUFFER_SIZE);
+    }
+
+    /**
+     * Reads a service request status from a message-based device.
+     *
+     * @return service request status byte
+     * @throws JVisaException if the read operation fails
+     * @see <a href="https://www.ni.com/docs/en-US/bundle/ni-visa/page/ni-visa/vireadstb.html">viReadSTB</a>
+     */
+    public int readStb() throws JVisaException {
+        final NativeLongByReference status = new NativeLongByReference();
+
+        final NativeLong errorCode = VISA_LIBRARY.viReadSTB(INSTRUMENT_HANDLE,
+                status
+        );
+        lastStatus = StatusCode.parseLong(errorCode.longValue());
+        RESOURCE_MANAGER.checkError(errorCode, "viReadSTB");
+
+        return status.getValue().intValue();
     }
 
     /**
@@ -369,6 +397,7 @@ public class JVisaInstrument implements Instrument, AutoCloseable {
      */
     public void clear() throws JVisaException {
         final NativeLong errorCode = VISA_LIBRARY.viClear(INSTRUMENT_HANDLE);
+        lastStatus = StatusCode.parseLong(errorCode.longValue());
         RESOURCE_MANAGER.checkError(errorCode, "viClear");
     }
 
@@ -381,6 +410,7 @@ public class JVisaInstrument implements Instrument, AutoCloseable {
     @Override
     public void close() throws JVisaException {
         final NativeLong errorCode = VISA_LIBRARY.viClose(INSTRUMENT_HANDLE);
+        lastStatus = StatusCode.parseLong(errorCode.longValue());
         RESOURCE_MANAGER.checkError(errorCode, "viClose");
     }
 
@@ -473,6 +503,7 @@ public class JVisaInstrument implements Instrument, AutoCloseable {
         final Memory rv = new Memory(bufferSize);
 
         final NativeLong errorCode = VISA_LIBRARY.viGetAttribute(INSTRUMENT_HANDLE, new NativeLong(attr), rv);
+        lastStatus = StatusCode.parseLong(errorCode.longValue());
         RESOURCE_MANAGER.checkError(errorCode, "viGetAttribute");
 
         // apparently we can't dispose or free or finalize a Memory, just need to let JVM call finalize()
@@ -488,6 +519,7 @@ public class JVisaInstrument implements Instrument, AutoCloseable {
                 new NativeLong(attr),
                 new NativeLong(value)
         );
+        lastStatus = StatusCode.parseLong(status.longValue());
         RESOURCE_MANAGER.checkError(status, "viSetAttribute");
     }
 
@@ -521,6 +553,7 @@ public class JVisaInstrument implements Instrument, AutoCloseable {
                 handle.CALLBACK,
                 handle.USER_DATA
         );
+        lastStatus = StatusCode.parseLong(errorCode.longValue());
         RESOURCE_MANAGER.checkError(errorCode, "viInstallHandler");
     }
 
@@ -533,6 +566,7 @@ public class JVisaInstrument implements Instrument, AutoCloseable {
                 handle.CALLBACK,
                 handle.USER_DATA
         );
+        lastStatus = StatusCode.parseLong(statusUninstall.longValue());
         RESOURCE_MANAGER.checkError(statusUninstall, "viUninstallHandler");
     }
 
@@ -547,6 +581,7 @@ public class JVisaInstrument implements Instrument, AutoCloseable {
                 (short) JVisaLibrary.VI_HNDLR, //mechanism
                 new NativeLong(0) //context
         );
+        lastStatus = StatusCode.parseLong(statusEnableEvent.longValue());
         RESOURCE_MANAGER.checkError(statusEnableEvent, "viEnableEvent");
     }
 
@@ -560,6 +595,7 @@ public class JVisaInstrument implements Instrument, AutoCloseable {
                 new NativeLong(eventType.VALUE),
                 (short) JVisaLibrary.VI_HNDLR //mechanism
         );
+        lastStatus = StatusCode.parseLong(statusEnableEvent.longValue());
         RESOURCE_MANAGER.checkError(statusEnableEvent, "viDisableEvent");
     }
 
@@ -572,6 +608,7 @@ public class JVisaInstrument implements Instrument, AutoCloseable {
                 new NativeLong(eventType.VALUE),
                 (short) JVisaLibrary.VI_ALL_MECH //mechanism
         );
+        lastStatus = StatusCode.parseLong(status.longValue());
         RESOURCE_MANAGER.checkError(status, "viDiscardEvents");
     }
 
@@ -646,4 +683,7 @@ public class JVisaInstrument implements Instrument, AutoCloseable {
         return writeTerminator;
     }
 
+    public StatusCode getLastStatus() {
+        return lastStatus;
+    }
 }

@@ -84,7 +84,7 @@ This document corresponds to Revision 7.2 from May 19, 2022. Direct link to that
 | 6.1.5             | [`viWriteAsync()`](https://www.ni.com/docs/en-US/bundle/ni-visa-api-ref/page/ni-visa-api-ref/viwriteasync.html)       | Write data to device asynchronously.                               | Not written                     |
 | 6.1.6             | [`viWriteFromFile()`](https://www.ni.com/docs/en-US/bundle/ni-visa-api-ref/page/ni-visa-api-ref/viwritefromfile.html) | Take data from a file and write it out synchronously.              | ❌ Won't implement               |
 | 6.1.7             | [`viAssertTrigger()`](https://www.ni.com/docs/en-US/bundle/ni-visa-api-ref/page/ni-visa-api-ref/viasserttrigger.html) | Assert software or hardware trigger.                               | Not written                     |
-| 6.1.8             | [`viReadSTB()`](https://www.ni.com/docs/en-US/bundle/ni-visa-api-ref/page/ni-visa-api-ref/vireadstb.html)             | Read a status byte of the service request.                         | Not written                     |
+| 6.1.8             | [`viReadSTB()`](https://www.ni.com/docs/en-US/bundle/ni-visa-api-ref/page/ni-visa-api-ref/vireadstb.html)             | Read a status byte of the service request.                         | ✅ `JVisaInstrument.readStb()`   |
 | 6.1.9             | [`viClear()`](https://www.ni.com/docs/en-US/bundle/ni-visa-api-ref/page/ni-visa-api-ref/viclear.html)                 | Clear a device.                                                    | ✅ `JVisaInstrument.clear()`     |
 
 
