@@ -23,7 +23,7 @@ public enum RENLineOperation {
     public final int VALUE;
 
     RENLineOperation(int value) {
-        this.VALUE = (short) value;
+        this.VALUE = value;
     }
 
     private static final Map<Integer, RENLineOperation> VALUE_MAP

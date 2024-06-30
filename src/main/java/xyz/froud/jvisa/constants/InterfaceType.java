@@ -28,7 +28,7 @@ public enum InterfaceType {
     public final int VALUE;
 
     InterfaceType(int value) {
-        this.VALUE = (short) value;
+        this.VALUE = value;
     }
 
     private static final Map<Integer, InterfaceType> VALUE_MAP

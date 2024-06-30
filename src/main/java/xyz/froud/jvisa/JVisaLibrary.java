@@ -1921,7 +1921,9 @@ public interface JVisaLibrary extends Library {
      * @param status STB status mask
      * @return status of the operation
      */
-    NativeLong viReadSTB(NativeLong vi, ShortBuffer status);
+    //NativeLong viReadSTB(NativeLong vi, ShortBuffer status);
+    // TODO Use NativeShortByReference
+    NativeLong viReadSTB(NativeLong vi, NativeLongByReference status);
 
     /**
      * Original signature : <code>ViStatus viClear(ViSession)</code><br>
@@ -2732,7 +2734,7 @@ public interface JVisaLibrary extends Library {
      * @param mode REN mode (state and optional commands, for example GoToLocal)
      * @return status of the operation
      */
-    NativeLong viGpibControlREN(NativeLong vi, short mode);
+    NativeLong viGpibControlREN(NativeLong vi, int mode);
 
     /**
      * Original signature : <code>ViStatus viGpibControlATN(ViSession, ViUInt16)</code><br>
