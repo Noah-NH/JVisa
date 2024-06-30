@@ -389,6 +389,58 @@ public class JVisaInstrument implements Instrument, AutoCloseable {
     }
 
     /**
+     * Establishes an access mode to the specified resources.
+     *
+     * @param lockType Specifies the type of lock requested
+     * @param timeout Absolute time period (in milliseconds) that a resource waits to get unlocked by the locking session before returning an error
+     * @param requestedKey This parameter is not used and should be set to VI_NULL when lockType is VI_EXCLUSIVE_LOCK. Refer to the Description section for more details about using VI_SHARED_LOCK.
+     * @return When lockType is VI_SHARED_LOCK, the resource returns a unique access key for the lock if the operation succeeds. This accessKey can then be passed to other sessions to share the lock.
+     * @throws JVisaException if the read operation fails
+     * @see <a href="https://www.ni.com/docs/en-US/bundle/ni-visa/page/ni-visa/vilock.html">viLock</a>
+     */
+    public String lock(AccessMode lockType, int timeout, String requestedKey) throws JVisaException {
+        final ByteBuffer accessKey = lockType == AccessMode.EXCLUSIVE_LOCK ? null : ByteBuffer.allocate(256);
+
+        final NativeLong errorCode = VISA_LIBRARY.viLock(INSTRUMENT_HANDLE,
+                new NativeLong(lockType.VALUE),
+                new NativeLong(timeout),
+                lockType == AccessMode.EXCLUSIVE_LOCK ? null : JVisaUtils.stringToByteBuffer(requestedKey),
+                accessKey
+        );
+        lastStatus = StatusCode.parseLong(errorCode.longValue());
+        RESOURCE_MANAGER.checkError(errorCode, "viLock");
+
+        if (accessKey == null) return null;
+        return new String(accessKey.array());
+    }
+
+    /**
+     * Relinquishes a lock for the specified resource.
+     * @throws JVisaException if the read operation fails
+     * @see <a href="https://www.ni.com/docs/en-US/bundle/ni-visa/page/ni-visa/viunlock.html">viUnlock</a>
+     */
+    public void unlock() throws JVisaException {
+        final NativeLong errorCode = VISA_LIBRARY.viUnlock(INSTRUMENT_HANDLE);
+        lastStatus = StatusCode.parseLong(errorCode.longValue());
+        RESOURCE_MANAGER.checkError(errorCode, "viUnlock");
+    }
+
+    /**
+     * Controls the state of the GPIB Remote Enable (REN) interface line, and optionally the remote/local state of the device.
+     *
+     * @param mode Specifies the state of the REN line and optionally the device remote/local state. See the Description section for actual values
+     * @throws JVisaException if the read operation fails
+     * @see <a href="https://www.ni.com/docs/en-US/bundle/ni-visa/page/ni-visa/vigpibcontrolren.html">viGpibControlREN</a>
+     */
+    public void gpibControlREN(RENLineOperation mode) throws JVisaException {
+        final NativeLong errorCode = VISA_LIBRARY.viGpibControlREN(INSTRUMENT_HANDLE,
+                mode.VALUE
+        );
+        lastStatus = StatusCode.parseLong(errorCode.longValue());
+        RESOURCE_MANAGER.checkError(errorCode, "viGpibControlREN");
+    }
+
+    /**
      * Clears the device input and output buffers. The corresponding VISA function is not
      * implemented in the libreVisa library.
      *

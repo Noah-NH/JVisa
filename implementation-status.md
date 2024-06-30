@@ -36,10 +36,10 @@ This document corresponds to Revision 7.2 from May 19, 2022. Direct link to that
 
 ## 3.6.2 Access Control Operations
 
-| VISA spec section | Function                                                                                                | Purpose                                             | Status       |
-|-------------------|---------------------------------------------------------------------------------------------------------|-----------------------------------------------------|--------------|
-| 3.6.2.1           | [`viLock()`](https://www.ni.com/docs/en-US/bundle/ni-visa-api-ref/page/ni-visa-api-ref/vilock.html)     | Establish an access mode to the specified resource. | Not written  |
-| 3.6.2.2           | [`viUnlock()`](https://www.ni.com/docs/en-US/bundle/ni-visa-api-ref/page/ni-visa-api-ref/viunlock.html) | Relinquish a lock for the specified resource.       | Not written  |
+| VISA spec section | Function                                                                                                | Purpose                                             | Status                       |
+|-------------------|---------------------------------------------------------------------------------------------------------|-----------------------------------------------------|------------------------------|
+| 3.6.2.1           | [`viLock()`](https://www.ni.com/docs/en-US/bundle/ni-visa-api-ref/page/ni-visa-api-ref/vilock.html)     | Establish an access mode to the specified resource. | ✅ `JVisaInstrument.lock()`   |
+| 3.6.2.2           | [`viUnlock()`](https://www.ni.com/docs/en-US/bundle/ni-visa-api-ref/page/ni-visa-api-ref/viunlock.html) | Relinquish a lock for the specified resource.       | ✅ `JVisaInstrument.unlock()` |
 
 
 ## 3.7.3 Event Operations
