@@ -163,7 +163,7 @@ public class JVisaInstrument implements Instrument, AutoCloseable {
      */
     public ByteBuffer queryBytes(String command) throws JVisaException {
         write(command);
-        return readBytes(DEFAULT_BUFFER_SIZE);
+        return readBytes();
     }
 
     /**
@@ -176,7 +176,7 @@ public class JVisaInstrument implements Instrument, AutoCloseable {
      */
     public ByteBuffer queryBytes(byte[] command) throws JVisaException {
         write(command);
-        return readBytes(DEFAULT_BUFFER_SIZE);
+        return readBytes();
     }
 
     public byte[] queryBinaryBlock(String command) throws JVisaException {
