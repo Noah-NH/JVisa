@@ -3,9 +3,9 @@ package xyz.froud.jvisa_example;
 import xyz.froud.jvisa.JVisaException;
 import xyz.froud.jvisa.JVisaInstrument;
 import xyz.froud.jvisa.JVisaResourceManager;
-import xyz.froud.jvisa.SerialFlowControl;
-import xyz.froud.jvisa.SerialParity;
-import xyz.froud.jvisa.SerialStopBits;
+import xyz.froud.jvisa.constants.FlowControl;
+import xyz.froud.jvisa.constants.Parity;
+import xyz.froud.jvisa.constants.StopBits;
 
 /**
  * Shows how to set serial port parameters.
@@ -19,9 +19,9 @@ public class SerialPortExample {
             try (JVisaInstrument instrument = resourceManager.openInstrument(portName)) {
                 instrument.setSerialBaudRate(9600);
                 instrument.setSerialDataBits(8);
-                instrument.setSerialStopBits(SerialStopBits.ONE);
-                instrument.setSerialParity(SerialParity.NONE);
-                instrument.setSerialFlowControl(SerialFlowControl.NONE);
+                instrument.setSerialStopBits(StopBits.ONE);
+                instrument.setSerialParity(Parity.NONE);
+                instrument.setSerialFlowControl(FlowControl.NONE);
                 instrument.setReadTerminationCharacter('\n');
                 instrument.setWriteTerminator("\n");
                 System.out.println(instrument.queryString("*IDN?"));
