@@ -33,6 +33,7 @@ import xyz.froud.jvisa.eventhandling.JVisaEventType;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.List;
 
 /**
  * Represents a Visa instrument. This is a wrapper around the native C instrument handle.
@@ -121,6 +122,33 @@ public class JVisaInstrument implements Instrument, AutoCloseable {
     public String queryString(byte[] command) throws JVisaException {
         write(command);
         return readString();
+    }
+
+    /**
+     * Sends a command and receives its response. If setWriteTerminator() was called with a non-null
+     * string, the terminator will be appended to the string before sending it to the instrument.
+     * It receives as many bytes as the instrument is sending.
+     *
+     * @param command string to send to the instrument
+     * @return response from instrument as a List of Floats
+     * @throws JVisaException if the write operation fails or the read operation fails
+     */
+    public List<Float> queryBinaryValues(String command) throws JVisaException {
+        write(command);
+        return readBinaryValues();
+    }
+
+    /**
+     * Sends a command and receives its response. No write terminator is added. It receives as many
+     * bytes as the instrument is sending.
+     *
+     * @param command bytes to send to the instrument
+     * @return response from instrument as a List of Floats
+     * @throws JVisaException if the write operation fails or the read operation fails
+     */
+    public List<Float> queryBinaryValues(byte[] command) throws JVisaException {
+        write(command);
+        return readBinaryValues();
     }
 
     /**
@@ -295,6 +323,16 @@ public class JVisaInstrument implements Instrument, AutoCloseable {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    /**
+     * Reads IEEE 754 Floats from the instrument
+     *
+     * @return list of received float values
+     * @throws JVisaException if the read operation fails
+     */
+    public List<Float> readBinaryValues() throws JVisaException {
+        return JVisaUtils.getIEEEFloats(readBytes());
     }
 
     /**

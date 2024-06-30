@@ -20,6 +20,9 @@ package xyz.froud.jvisa;
 
 
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * Contains static utility functions.
@@ -47,6 +50,45 @@ public class JVisaUtils {
         return new String(buf.array()).trim();
     }
 
+    protected static int getIEEEDataOffset(ByteBuffer buf) {
+        int begin = 0;
 
+        for (int i = 0; i < buf.array().length; i++) {
+            if (buf.array()[i] == '#') begin = i;
+        }
 
+        int headerLength = buf.array()[begin + 1] - '0';
+
+        return begin + 2 + headerLength;
+    }
+
+    protected static int getIEEEDataLength(ByteBuffer buf) {
+        int begin = 0;
+
+        for (int i = 0; i < buf.array().length; i++) {
+            if (buf.array()[i] == '#') begin = i;
+        }
+
+        int headerLength = buf.array()[begin + 1] - '0';
+
+        int dataLength = 0;
+        for (int i = 0; i < headerLength; i++) {
+            dataLength += (buf.array()[begin + 2 + i] - '0') * Math.pow(10, i);
+        }
+
+        return dataLength;
+    }
+
+    protected static List<Float> getIEEEFloats(ByteBuffer buf) {
+        List<Float> ret = new ArrayList<>();
+
+        int length = getIEEEDataLength(buf);
+        int offset = getIEEEDataOffset(buf);
+
+        buf.position(offset);
+        for (int i = 0; i < length; i += 4) {
+            ret.add(buf.getFloat());
+        }
+        return ret;
+    }
 }
