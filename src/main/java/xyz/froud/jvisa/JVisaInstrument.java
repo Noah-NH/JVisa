@@ -30,6 +30,8 @@ import xyz.froud.jvisa.constants.StopBits;
 import xyz.froud.jvisa.eventhandling.JVisaEventHandler;
 import xyz.froud.jvisa.eventhandling.JVisaEventType;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.nio.ByteBuffer;
 
 /**
@@ -43,6 +45,7 @@ import java.nio.ByteBuffer;
 public class JVisaInstrument implements Instrument, AutoCloseable {
 
     private final static int DEFAULT_BUFFER_SIZE = 1024;
+    private final static int chunkSize = 20 * 1024;
 
     private final NativeLong INSTRUMENT_HANDLE;
     private final JVisaResourceManager RESOURCE_MANAGER;
@@ -96,7 +99,7 @@ public class JVisaInstrument implements Instrument, AutoCloseable {
     /**
      * Sends a command and receives its response. If setWriteTerminator() was called with a non-null
      * string, the terminator will be appended to the string before sending it to the instrument.
-     * It receives as many bytes as the instrument is sending. (That is probably wrong, it can receive maximum DEFAULT_BUFFER_SIZE bytes)
+     * It receives as many bytes as the instrument is sending.
      *
      * @param command string to send to the instrument
      * @return response from instrument as a String
@@ -104,12 +107,12 @@ public class JVisaInstrument implements Instrument, AutoCloseable {
      */
     public String queryString(String command) throws JVisaException {
         write(command);
-        return readString(DEFAULT_BUFFER_SIZE);
+        return readString();
     }
 
     /**
      * Sends a command and receives its response. No write terminator is added. It receives as many
-     * bytes as the instrument is sending. (That is probably wrong, it can receive maximum DEFAULT_BUFFER_SIZE bytes)
+     * bytes as the instrument is sending.
      *
      * @param command bytes to send to the instrument
      * @return response from instrument as a String
@@ -117,7 +120,7 @@ public class JVisaInstrument implements Instrument, AutoCloseable {
      */
     public String queryString(byte[] command) throws JVisaException {
         write(command);
-        return readString(DEFAULT_BUFFER_SIZE);
+        return readString();
     }
 
     /**
@@ -271,6 +274,30 @@ public class JVisaInstrument implements Instrument, AutoCloseable {
     }
 
     /**
+     * Reads data in chunks from the instrument
+     *
+     * @return response from the instrument as ByteBuffer
+     * @throws JVisaException if the read operation fails
+     */
+    public ByteBuffer readBytes() throws JVisaException {
+        final StatusCode loopStatus = StatusCode.SUCCESS_MAX_COUNT_READ;
+
+        ByteArrayOutputStream data = new ByteArrayOutputStream();
+
+        try {
+            StatusCode status = loopStatus;
+            while (status == loopStatus) {
+                ByteBuffer chunk = readBytes(chunkSize);
+                status = lastStatus;
+                data.write(chunk.array());
+            }
+            return ByteBuffer.wrap(data.toByteArray());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
      * Reads a string from the instrument, e.g. a command response.
      *
      * @param bufferSize size of response buffer in bytes
@@ -291,7 +318,9 @@ public class JVisaInstrument implements Instrument, AutoCloseable {
      * @throws JVisaException if the read operation fails
      */
     public String readString() throws JVisaException {
-        return readString(DEFAULT_BUFFER_SIZE);
+        final ByteBuffer buf = readBytes();
+
+        return new String(buf.array(), 0, buf.limit()).trim();
     }
 
     /**
